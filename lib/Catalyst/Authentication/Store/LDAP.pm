@@ -3,7 +3,7 @@ package Catalyst::Authentication::Store::LDAP;
 use strict;
 use warnings;
 
-our $VERSION = '0.1000';
+our $VERSION = '0.1001';
 
 use Catalyst::Authentication::Store::LDAP::Backend;
 
@@ -26,11 +26,9 @@ Catalyst::Authentication::Store::LDAP
 
 =head1 SYNOPSIS
 
-    use Catalyst qw/
+    use Catalyst qw(
       Authentication
-      Authentication::Store::LDAP
-      Authentication::Credential::Password
-      /;
+      );
 
     __PACKAGE__->config(
       'authentication' => {
