@@ -78,7 +78,7 @@ use base qw( Class::Accessor::Fast );
 use strict;
 use warnings;
 
-our $VERSION = '0.1002';
+our $VERSION = '0.1003';
 
 use Catalyst::Authentication::Store::LDAP::User;
 use Net::LDAP;
@@ -314,8 +314,11 @@ sub lookup_user {
 
     # a little extra sanity check with the 'eq' since LDAP already
     # says it matches.
+    # NOTE that Net::LDAP returns exactly what you asked for, but
+    # because LDAP is often case insensitive, FoO can match foo
+    # and so we normalize with lc().
     if ( defined($entry) ) {
-        unless ( $entry->get_value($user_field) eq $id ) {
+        unless ( lc( $entry->get_value($user_field) ) eq lc($id) ) {
             Catalyst::Exception->throw(
                 "LDAP claims '$user_field' equals '$id' but results entry does not match."
             );
@@ -395,14 +398,8 @@ sub lookup_roles {
     }
     my $rolesearch = $ldap->search(@searchopts);
     my @roles;
-RESULT: while ( my $entry = $rolesearch->pop_entry ) {
-        my ($role) = $entry->get_value( $self->role_field );
-        if ($role) {
-            push( @roles, $role );
-        }
-        else {
-            next RESULT;
-        }
+RESULT: foreach my $entry ( $rolesearch->entries ) {
+        push( @roles, $entry->get_value( $self->role_field ) );
     }
     return @roles;
 }
