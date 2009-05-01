@@ -8,12 +8,15 @@ Catalyst::Authentication::Store::LDAP::User
 
 =head1 SYNOPSIS
 
-You should be creating these objects through L<Catalyst::Authentication::Store::LDAP::Backend>'s "get_user" method, or just letting $c->login do
+You should be creating these objects through L<Catalyst::Authentication::Store::LDAP::Backend>'s "get_user" method, or just letting $c->authenticate do
 it for you.
 
     sub action : Local {
         my ( $self, $c ) = @_;
-        $c->login($c->req->param(username), $c->req->param(password));
+        $c->authenticate({
+            id => $c->req->param(username),
+            password => $c->req->param(password)
+        );
         $c->log->debug($c->user->username . "is really neat!");
     }
 
@@ -46,7 +49,7 @@ use base qw( Catalyst::Authentication::User Class::Accessor::Fast );
 use strict;
 use warnings;
 
-our $VERSION = '0.1004';
+our $VERSION = '0.1005';
 
 BEGIN { __PACKAGE__->mk_accessors(qw/user store/) }
 

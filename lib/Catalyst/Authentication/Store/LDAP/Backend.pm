@@ -53,19 +53,11 @@ Catalyst::Authentication::Store::LDAP::Backend
     
     our $users = Catalyst::Authentication::Store::LDAP::Backend->new(\%config);
 
-    sub action : Local {
-        my ( $self, $c ) = @_;
-
-        $c->login( $users->get_user( $c->req->param("login") ),
-            $c->req->param("password") );
-    }
-
 =head1 DESCRIPTION
 
-You probably want L<Catalyst::Authentication::Store::LDAP>, unless
-you are mixing several stores in a single app and one of them is LDAP.
+You probably want L<Catalyst::Authentication::Store::LDAP>.
 
-Otherwise, this lets you create a store manually. 
+Otherwise, this lets you create a store manually.
 
 See the L<Catalyst::Authentication::Store::LDAP> documentation for
 an explanation of the configuration options.
@@ -80,7 +72,7 @@ use base qw( Class::Accessor::Fast );
 use strict;
 use warnings;
 
-our $VERSION = '0.1004';
+our $VERSION = '0.1005';
 
 use Catalyst::Authentication::Store::LDAP::User;
 use Net::LDAP;
@@ -263,11 +255,12 @@ Given a User ID, this method will:
   A) Bind to the directory using the configured binddn and bindpw
   B) Perform a search for the User Object in the directory, using
      user_basedn, user_filter, and user_scope.
-  C) Assuming we found the object, we will walk it's attributes 
+  C) Assuming we found the object, we will walk it's attributes
      using L<Net::LDAP::Entry>'s get_value method.  We store the
-     results in a hashref.
-  D) Return a hashref that looks like: 
-     
+     results in a hashref. If we do not find the object, then
+     undef is returned.
+  D) Return a hashref that looks like:
+
      $results = {
         'ldap_entry' => $entry, # The Net::LDAP::Entry object
         'attributes' => $attributes,
@@ -300,10 +293,9 @@ sub lookup_user {
         push( @searchopts, %{ $self->user_search_options } );
     }
     my $usersearch = $ldap->search(@searchopts);
-    if ( $usersearch->is_error ) {
-        Catalyst::Exception->throw(
-            "LDAP Error while searching for user: " . $usersearch->error );
-    }
+
+    return if ( $usersearch->is_error );
+
     my $userentry;
     my $user_field     = $self->user_field;
     my $results_filter = $self->user_results_filter;

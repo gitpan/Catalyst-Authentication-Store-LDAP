@@ -1,22 +1,26 @@
---- 
-abstract: Authenticate Users against LDAP Directories
-author: 
-  - Adam Jacob <holoway@cpan.org>
-build_requires: 
+---
+abstract: 'Authenticate Users against LDAP Directories'
+author:
+  - 'Adam Jacob <holoway@cpan.org>'
+build_requires:
   Net::LDAP::Server::Test: 0.07
+  Test::Exception: 0
+  Test::MockObject: 0
   Test::More: 0
 distribution_type: module
-generated_by: Module::Install version 0.68
+generated_by: 'Module::Install version 0.77'
 license: perl
-meta-spec: 
-  url: http://module-build.sourceforge.net/META-spec-v1.3.html
-  version: 1.3
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
 name: Catalyst-Authentication-Store-LDAP
-no_index: 
-  directory: 
+no_index:
+  directory:
     - inc
     - t
-requires: 
+requires:
   Catalyst::Plugin::Authentication: 0.10003
   Net::LDAP: 0
-version: 0.1003
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.1005
