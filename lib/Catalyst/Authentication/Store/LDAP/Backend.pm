@@ -72,7 +72,7 @@ use base qw( Class::Accessor::Fast );
 use strict;
 use warnings;
 
-our $VERSION = '0.1005';
+our $VERSION = '1.006';
 
 use Catalyst::Authentication::Store::LDAP::User;
 use Net::LDAP;
@@ -129,7 +129,7 @@ sub new {
     return $self;
 }
 
-=head2 find_user( I<authinfo> )
+=head2 find_user( I<authinfo>, $c )
 
 Creates a L<Catalyst::Authentication::Store::LDAP::User> object
 for the given User ID.  This is the preferred mechanism for getting a 
@@ -142,21 +142,23 @@ C<username>. The value will be compared against the LDAP C<user_field> field.
 
 sub find_user {
     my ( $self, $authinfo, $c ) = @_;
-    return $self->get_user( $authinfo->{id} || $authinfo->{username} );
+    return $self->get_user( $authinfo->{id} || $authinfo->{username}, $c );
 }
 
 =head2 get_user($id)
 
 Creates a L<Catalyst::Authentication::Store::LDAP::User> object
-for the given User ID.  This is the preferred mechanism for getting a 
-given User out of the Store.
+for the given User ID, or calls C<new> on the class specified in
+C<user_class>.  This instance of the store object, the results of
+C<lookup_user> and $c are passed as arguments (in that order) to C<new>.
+This is the preferred mechanism for getting a given User out of the Store.
 
 =cut
 
 sub get_user {
-    my ( $self, $id ) = @_;
+    my ( $self, $id, $c ) = @_;
     my $user = $self->user_class->new( $self,
-        $self->lookup_user($id) );
+        $self->lookup_user($id), $c );
     return $user;
 }
 
@@ -277,6 +279,8 @@ sub lookup_user {
     if ( $id =~ /\*/ ) {
         Catalyst::Exception->throw("ID $id contains wildcards!");
     }
+    # Trim trailing space or we confuse ourselves
+    $id =~ s/\s+$//;
     my $ldap = $self->ldap_bind;
     my @searchopts;
     if ( defined( $self->user_basedn ) ) {
@@ -294,7 +298,7 @@ sub lookup_user {
     }
     my $usersearch = $ldap->search(@searchopts);
 
-    return if ( $usersearch->is_error );
+    return undef if ( $usersearch->is_error );
 
     my $userentry;
     my $user_field     = $self->user_field;

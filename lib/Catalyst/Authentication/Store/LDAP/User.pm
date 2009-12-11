@@ -49,26 +49,28 @@ use base qw( Catalyst::Authentication::User Class::Accessor::Fast );
 use strict;
 use warnings;
 
-our $VERSION = '0.1005';
+our $VERSION = '1.006';
 
-BEGIN { __PACKAGE__->mk_accessors(qw/user store/) }
+BEGIN { __PACKAGE__->mk_accessors(qw/user store _ldap_connection_password/) }
 
 use overload '""' => sub { shift->stringify }, fallback => 1;
 
 =head1 METHODS
 
-=head2 new($store, $user)
+=head2 new($store, $user, $c)
 
 Takes a L<Catalyst::Authentication::Store::LDAP::Backend> object
 as $store, and the data structure returned by that class's "get_user"
-method as $user.
+method as $user.  The final argument is an instance of your application,
+which is passed along for those wanting to subclass User and perhaps use
+models for fetching data.
 
 Returns a L<Catalyst::Authentication::Store::LDAP::User> object.
 
 =cut
 
 sub new {
-    my ( $class, $store, $user ) = @_;
+    my ( $class, $store, $user, $c ) = @_;
 
     return unless $user;
 
@@ -139,10 +141,15 @@ sub check_password {
         'forauth' );
     if ( defined($ldap) ) {
         if ($self->store->role_search_as_user) {
+            # FIXME - This can be removed and made to use the code below..
             # Have to do the role lookup _now_, as this is the only time
             # that we have the user's password/ldap bind..
             $self->roles($ldap);
         }
+        # Stash a closure which can be used to retrieve the connection in the users context later.
+        $self->_ldap_connection_password( sub { $password } ); # Close over
+            # password to try to ensure it doesn't come out in debug dumps
+            # or get serialized into sessions etc..
         return 1;
     }
     else {
@@ -225,6 +232,19 @@ sub has_attribute {
     else {
         return undef;
     }
+}
+
+=head2 ldap_connection
+
+Re-binds to the auth store with the credentials of the user you logged in
+as, and returns a L<Net::LDAP> object which you can use to do further queries.
+
+=cut
+
+sub ldap_connection {
+    my $self = shift;
+    $self->store->ldap_bind( undef, $self->ldap_entry->dn,
+        $self->_ldap_connection_password->() );
 }
 
 =head2 AUTOLOADed methods

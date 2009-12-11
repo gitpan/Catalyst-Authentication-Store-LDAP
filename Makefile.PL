@@ -1,4 +1,4 @@
-use inc::Module::Install;
+use inc::Module::Install 0.87;
 
 name('Catalyst-Authentication-Store-LDAP');
 abstract('Authenticate Users against LDAP Directories');
@@ -16,6 +16,8 @@ build_requires('Test::MockObject');
 build_required('Test::Exception');
 
 auto_install();
+
+resources repository => 'http://dev.catalyst.perl.org/repos/Catalyst/Catalyst-Authentication-Store-LDAP/trunk/';
 
 &WriteAll;
 
