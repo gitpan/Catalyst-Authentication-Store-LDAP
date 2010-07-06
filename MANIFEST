@@ -18,6 +18,7 @@ t/01-basic.t
 t/02-realms_api.t
 t/03-entry_class.t
 t/04-user_class.t
+t/05-user_attributes.t
 t/10-roles-mock.t
 t/50.auth.case.sensitivity.t
 t/lib/EntryClass.pm
