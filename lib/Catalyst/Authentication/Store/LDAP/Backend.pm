@@ -72,7 +72,7 @@ use base qw( Class::Accessor::Fast );
 use strict;
 use warnings;
 
-our $VERSION = '1.012';
+our $VERSION = '1.013';
 
 use Catalyst::Authentication::Store::LDAP::User;
 use Net::LDAP;
@@ -120,10 +120,11 @@ sub new {
     $config_hash{'use_roles'}   ||= '1';
     $config_hash{'start_tls'}   ||= '0';
     $config_hash{'entry_class'} ||= 'Catalyst::Model::LDAP::Entry';
-    $config_hash{'user_class'}  ||= 'Catalyst::Authentication::Store::LDAP::User';
+    $config_hash{'user_class'}
+        ||= 'Catalyst::Authentication::Store::LDAP::User';
     $config_hash{'role_search_as_user'} ||= 0;
 
-    Catalyst::Utils::ensure_class_loaded($config_hash{'user_class'});
+    Catalyst::Utils::ensure_class_loaded( $config_hash{'user_class'} );
     my $self = \%config_hash;
     bless( $self, $class );
     return $self;
@@ -157,8 +158,7 @@ This is the preferred mechanism for getting a given User out of the Store.
 
 sub get_user {
     my ( $self, $id, $c ) = @_;
-    my $user = $self->user_class->new( $self,
-        $self->lookup_user($id), $c );
+    my $user = $self->user_class->new( $self, $self->lookup_user($id), $c );
     return $user;
 }
 
@@ -210,12 +210,18 @@ If $binddn is "anonymous", an anonymous bind will be performed.
 sub ldap_bind {
     my ( $self, $ldap, $binddn, $bindpw, $forauth ) = @_;
     $forauth ||= 0;
-    $ldap    ||= $self->ldap_connect;
+    $ldap ||= $self->ldap_connect;
     if ( !defined($ldap) ) {
         Catalyst::Exception->throw("LDAP Server undefined!");
     }
-    $binddn ||= $self->binddn;
-    $bindpw ||= $self->bindpw;
+
+    # if username is present, make sure password is present too.
+    # see https://rt.cpan.org/Ticket/Display.html?id=81908
+    if ( !defined $binddn ) {
+        $binddn = $self->binddn;
+        $bindpw = $self->bindpw;
+    }
+
     if ( $binddn eq "anonymous" ) {
         $self->_ldap_bind_anon($ldap);
     }
@@ -236,14 +242,14 @@ sub ldap_bind {
             }
         }
         else {
-            $self->_ldap_bind_anon($ldap, $binddn);
+            $self->_ldap_bind_anon( $ldap, $binddn );
         }
     }
     return $ldap;
 }
 
 sub _ldap_bind_anon {
-    my ($self, $ldap, $dn) = @_;
+    my ( $self, $ldap, $dn ) = @_;
     my $mesg = $ldap->bind($dn);
     if ( $mesg->is_error ) {
         Catalyst::Exception->throw( "Error on Bind: " . $mesg->error );
@@ -279,6 +285,7 @@ sub lookup_user {
     if ( $id =~ /\*/ ) {
         Catalyst::Exception->throw("ID $id contains wildcards!");
     }
+
     # Trim trailing space or we confuse ourselves
     $id =~ s/\s+$//;
     my $ldap = $self->ldap_bind;
@@ -345,8 +352,8 @@ sub lookup_user {
             $attrhash->{ lc($attr) } = \@attrvalues;
         }
     }
-    
-    eval { Catalyst::Utils::ensure_class_loaded($self->entry_class) };
+
+    eval { Catalyst::Utils::ensure_class_loaded( $self->entry_class ) };
     if ( !$@ ) {
         bless( $userentry, $self->entry_class );
         $userentry->{_use_unicode}++;
@@ -437,7 +444,7 @@ Returns get_user() for I<id>.
 
 sub from_session {
     my ( $self, $c, $id ) = @_;
-    $self->get_user($id, $c);
+    $self->get_user( $id, $c );
 }
 
 1;
