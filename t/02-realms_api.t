@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Catalyst::Exception;
 
-use Test::More tests => 5;
+use Test::More;
 use lib 't/lib';
 use LDAPTest;
 my $server = LDAPTest::spawn_server();
@@ -34,4 +34,6 @@ ok( my $user = $back->find_user( { username => 'somebody' } ), "find_user" );
 isa_ok( $user, "Catalyst::Authentication::Store::LDAP::User" );
 my $displayname = $user->displayname;
 cmp_ok( $displayname, 'eq', 'Some Body', 'Should be Some Body' );
+
+done_testing;
 

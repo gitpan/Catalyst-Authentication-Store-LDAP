@@ -7,7 +7,7 @@ build_requires:
   Net::LDAP::Server::Test: 0.07
   Test::Exception: 0
   Test::MockObject: 0
-  Test::More: 0
+  Test::More: 0.88
 configure_requires:
   ExtUtils::MakeMaker: 6.36
 distribution_type: module
@@ -28,4 +28,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://dev.catalyst.perl.org/repos/Catalyst/Catalyst-Authentication-Store-LDAP/trunk/
-version: 1.013
+version: 1.014

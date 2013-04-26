@@ -72,7 +72,7 @@ use base qw( Class::Accessor::Fast );
 use strict;
 use warnings;
 
-our $VERSION = '1.013';
+our $VERSION = '1.014';
 
 use Catalyst::Authentication::Store::LDAP::User;
 use Net::LDAP;
@@ -226,7 +226,8 @@ sub ldap_bind {
         $self->_ldap_bind_anon($ldap);
     }
     else {
-        if ($bindpw) {
+        # Don't fall back to unauthenticated bind when authenticating
+        if ($bindpw or $forauth eq 'forauth') {
             my $mesg = $ldap->bind( $binddn, 'password' => $bindpw );
             if ( $mesg->is_error ) {
 
